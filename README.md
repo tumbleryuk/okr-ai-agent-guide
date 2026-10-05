@@ -104,8 +104,8 @@ Cara utama, tempelkan label ini di judul PR:
 
 - Angkanya adalah `id` langkah milik sendiri, dibaca dari `GET /api/okr/saya`; setiap butir
   pada daftar `langkah` membawa `id`-nya. Bukan `ajuan_id`, bukan nomor urut formulir.
-- Bentuk yang dikenali: `[okr: 12]`, `[okr:12]`, `[OKR: 12]`. Besar-kecil huruf bebas, spasi di
-  dalam kurung bebas.
+- Bentuk yang dikenali: `[okr: 12]`, `[okr:12]`, `[OKR: 12]`. Besar-kecil huruf bebas, spasi sesudah
+  titik dua bebas. Spasi sesudah `[` atau sebelum `:` (`[ okr: 12]`, `[okr : 12]`) tidak dikenali.
 - Bentuk yang **tidak** dikenali: `[okr-12]`, `[okr 12]`, `(okr: 12)`, `[okr: #12]`.
 - Label harus berada di judul PR. Nama cabang dan pesan commit tidak dibaca.
 

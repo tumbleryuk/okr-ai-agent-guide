@@ -20,12 +20,14 @@ Zero dependency, python polos.
 """
 
 import argparse
+import hashlib
 import json
 import os
 import sys
 import urllib.error
 import urllib.request
 import uuid
+from datetime import datetime, timedelta, timezone
 
 DASAR = "https://okr.tumbleryukoperasional.shop"
 RUTE = DASAR + "/api/okr/ajuan"
@@ -60,6 +62,8 @@ ISIAN_ANGKA = ["ambang", "jendela_min_data", "penjaga_ambang"]
 ISIAN_TANGGAL = ["jendela_mulai", "jendela_selesai"]
 
 BASELINE_MINIMAL = 6
+
+WIB = timezone(timedelta(hours=7))
 
 # Jawaban isian 7 yang ga boleh, karena ga nyebut nama orang.
 DIPAKEIN_TERLARANG = [
@@ -177,8 +181,34 @@ def pesan_kunci_nol_ada():
 # ------------------------------------------------------------------ pemeriksa
 
 
-def periksa(data, arah=None, nama_saya=None):
-    """Balikin daftar masalah. Daftar kosong artinya lolos semua."""
+def kuartal_dari(tanggal):
+    """(tahun, bulan, hari) -> (tahun, nomor kuartal)."""
+    return (tanggal[0], (tanggal[1] - 1) // 3 + 1)
+
+
+def kuartal_teks(kuartal):
+    return str(kuartal[0]) + "-Q" + str(kuartal[1])
+
+
+def awal_kuartal(kuartal):
+    return "%04d-%02d-01" % (kuartal[0], (kuartal[1] - 1) * 3 + 1)
+
+
+def kuartal_berikut(kuartal):
+    tahun, nomor = kuartal
+    return (tahun + 1, 1) if nomor == 4 else (tahun, nomor + 1)
+
+
+def hari_ini_wib():
+    sekarang = datetime.now(WIB)
+    return (sekarang.year, sekarang.month, sekarang.day)
+
+
+def periksa(data, arah=None, nama_saya=None, hari_ini=None):
+    """Balikin daftar masalah. Daftar kosong artinya lolos semua.
+
+    `hari_ini` cuma buat uji; kosong = tanggal WIB sekarang.
+    """
     masalah = []
 
     if not isinstance(data, dict):
@@ -225,6 +255,23 @@ def periksa(data, arah=None, nama_saya=None):
                 tgl_selesai = hasil
     if tgl_mulai and tgl_selesai and tgl_mulai >= tgl_selesai:
         masalah.append("Tanggal mulai jendela harus lebih awal dari tanggal selesai.")
+
+    # 4b. Jendela wajib mulai di kuartal yang lagi jalan (atau kuartal depan).
+    # Halaman OKR naruh ajuan di kuartal TANGGAL MULAI JENDELA, bukan di kuartal
+    # hari kirim. Tanggal yang kesalin dari contoh lama bikin ajuan nyasar ke
+    # kuartal yang udah lewat: diterima tanpa error, tapi nol muncul di papan.
+    if tgl_mulai:
+        sekarang = kuartal_dari(hari_ini or hari_ini_wib())
+        kuartal_ajuan = kuartal_dari(tgl_mulai)
+        if kuartal_ajuan not in (sekarang, kuartal_berikut(sekarang)):
+            masalah.append(
+                "Tanggal 'jendela_mulai' (" + str(data["jendela_mulai"]).strip() + ") jatuh di "
+                "kuartal " + kuartal_teks(kuartal_ajuan) + ", padahal kuartal yang lagi jalan "
+                + kuartal_teks(sekarang) + ". Halaman OKR naruh ajuan di kuartal tanggal mulai "
+                "jendela, jadi ajuan ini bakal nyasar dan nol muncul di papan. Ganti ke tanggal "
+                "di dalam kuartal ini, paling awal " + awal_kuartal(sekarang) + ". Tanggal di "
+                "contoh panduan itu cuma contoh, jangan disalin."
+            )
 
     # 5. Isian 7 bukan diri sendiri
     if str(data.get("dipakein_siapa", "")).strip():
@@ -493,27 +540,30 @@ def cek_kunci():
     return 3
 
 
-def nomor_kirim(path_ajuan):
-    """Balikin nomor pengiriman buat berkas ajuan ini.
+def nomor_kirim(path_ajuan, isi):
+    """Balikin nomor pengiriman buat isi kiriman ini.
 
-    Nomornya dibikin sekali lalu disimpen di berkas pendamping. Kalau
-    pengirimannya diulang karena sambungan putus, nomor yang sama kepakai lagi,
-    jadi halaman OKR tau itu kiriman yang sama dan ga nyimpen dua kali.
+    Nomornya disimpen di berkas pendamping bareng sidik isi kirimannya. Kalau
+    pengirimannya diulang dengan isi SAMA (sambungan putus), nomor yang sama
+    kepakai lagi, jadi halaman OKR tau itu kiriman yang sama dan ga nyimpen dua
+    kali. Kalau isinya BERUBAH (berkas diedit lalu dikirim lagi), nomornya
+    dibikin baru. Nomor lama yang dipakai buat isi beda bakal ditolak 409.
     """
     pendamping = str(path_ajuan) + ".nomor-kirim"
+    sidik = hashlib.sha256(isi).hexdigest()
     try:
         if os.path.isfile(pendamping):
             with open(pendamping, "r", encoding="utf-8") as f:
-                lama = f.read().strip()
-            if lama:
-                return lama
+                bagian = f.read().split()
+            if len(bagian) == 2 and bagian[0] == sidik:
+                return bagian[1]
     except OSError:
         pass
 
     baru = str(uuid.uuid4())
     try:
         with open(pendamping, "w", encoding="utf-8") as f:
-            f.write(baru)
+            f.write(sidik + " " + baru)
     except OSError:
         pass
     return baru
@@ -536,7 +586,7 @@ def kirim(data, path_ajuan):
             "Authorization": "Bearer " + kunci,
             "Content-Type": "application/json",
             "User-Agent": IDENTITAS,
-            "Idempotency-Key": nomor_kirim(path_ajuan),
+            "Idempotency-Key": nomor_kirim(path_ajuan, isi),
         },
     )
 
