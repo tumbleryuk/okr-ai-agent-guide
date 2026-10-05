@@ -193,6 +193,14 @@ python kirim_ajuan.py --cek ajuan-nur.json --arah turun --nama-saya Nur
 Pemeriksa ini jalan di komputer sendiri, nol nyentuh internet. Kalau dia nemu yang kurang,
 benerin dulu bareng pemakai, ulangi sampai bersih.
 
+**Kuartal baru = berkas baru.** Ajuan kuartal ini JANGAN ngedit berkas ajuan kuartal lalu.
+Bikin berkas baru, misal `ajuan-nur-2026-Q4.json`. Halaman OKR naruh ajuan di kuartal
+**tanggal `jendela_mulai`**, bukan di kuartal hari ngirim. Tanggal yang kesalin dari contoh
+atau dari ajuan lama bikin ajuan nyasar ke kuartal yang udah lewat. Ajuannya diterima tanpa
+error, tapi nol muncul di papan dan persennya 0% sepanjang kuartal. Pemeriksa sekarang nolak
+`jendela_mulai` di luar kuartal yang lagi jalan (atau kuartal depan), jadi kalau dia protes
+soal kuartal, ganti tanggalnya, jangan diakalin.
+
 ### Langkah 6. Bacain ulang, minta izin, baru kirim
 Tampilkan ringkasan delapan isian PLUS langkah pelaksanaannya pakai bahasa sehari-hari,
 bukan tampilan berkas mentah. Langkahnya ikut dibacain: judul + kata kuncinya.
@@ -203,6 +211,43 @@ Ngirim itu **ga bisa ditarik**. Begitu masuk, penilai lihat. Jadi jangan main ki
 ```bash
 python kirim_ajuan.py --kirim ajuan-nur.json --arah turun --nama-saya Nur
 ```
+
+### Langkah 6b. ⚠️ Kirim ulang = RONDE BARU, dan langkah lama kamu ikut dipensiunin
+
+Ini jebakan yang paling gampang kena dan paling susah keliatan, karena **nol ada pesan error
+sama sekali**.
+
+Tiap ajuan baru yang mendarat bikin halaman OKR **nyetempel `ganti_arah` ke SEMUA langkah
+punya orang itu di kuartal yang sama**, bukan cuma langkah di ajuan lama yang mau diganti.
+Yang dilewatin cuma langkah yang statusnya udah nol-aktif dari sananya.
+
+Akibatnya, kalau kamu kirim ulang cuma buat NAMBAH satu langkah baru:
+
+- langkah baru itu masuk dengan status `jalan`, dan
+- **semua langkah lamamu yang masih kamu kerjain berubah jadi `ganti_arah`**, artinya
+  "ditinggal, sengaja dibuang dari hitungan". Di papan penilai targetnya jadi kosong, bukan 0%.
+
+**Jadi aturannya:** berkas kiriman ulang WAJIB bawa **SEMUA langkah yang masih dikerjain**,
+bukan cuma yang baru. Perlakuin dia sebagai daftar utuh yang menggantikan daftar lama, bukan
+sebagai tambahan.
+
+Sebelum ngirim ulang, agent WAJIB:
+
+1. Tarik dulu daftar langkah yang sekarang: `GET /api/okr/saya`, lihat tiap butir `langkah`
+   beserta `id` dan `status`-nya.
+2. Bacain ke pemakai: "langkah kamu sekarang ada N. Yang masih kamu kerjain yang mana aja?"
+3. Tulis ulang SEMUA yang masih dikerjain ke berkas kiriman, plus yang baru.
+4. Baru kirim.
+
+**Langkah yang terlanjur ke-`ganti_arah` NOL bisa diidupin lagi.** Nol ada tombol buat
+ngebalikin statusnya. Kiriman berikutnya yang nulis ulang langkah itu bikin langkah BARU
+dengan nomor (`id`) BARU; yang lama tetap `ganti_arah` selamanya. Akibatnya label
+`[okr: <nomor lama>]` di judul PR berikutnya nol kehitung lagi: sesudah kirim ulang, tarik
+lagi `GET /api/okr/saya` dan kasih tau pemakai nomor langkah yang BARU. Ini yang bikin langkah
+1-3 di atas bukan saran, tapi wajib.
+
+⚠️ Nomor `ronde` mentok di 2. Kiriman ketiga dan seterusnya TETAP diterima dan langkah
+lamanya TETAP dipensiunin, cuma nomor rondenya nol naik lagi.
 
 ### Langkah 7. Terjemahin balikannya
 Lihat bagian "Balikan dan artinya" di bawah. Jangan nempel balasan mentah ke pemakai.
@@ -222,7 +267,8 @@ ada dua jalan.
 - Nomornya = `id` langkah punyamu, ambil dari `GET /api/okr/saya` (tiap butir di daftar
   `langkah` bawa `id`-nya sendiri). Bukan nomor ajuan, bukan nomor urut di formulir.
 - Bentuk yang dikenal: `[okr: 12]`, `[okr:12]`, `[OKR: 12]` — besar-kecil huruf bebas, spasi
-  di dalam kurung bebas.
+  sesudah titik dua bebas. Spasi sesudah `[` atau sebelum `:` (`[ okr: 12]`, `[okr : 12]`)
+  NOL dikenal.
 - Bentuk yang **NOL dikenal**: `[okr-12]`, `[okr 12]`, `(okr: 12)`, `[okr: #12]`. Titik dua
   itu wajib, dan kurungnya wajib kurung siku.
 - Boleh ditaruh di depan atau di belakang judul, asal masih di judul PR — bukan di badan PR,
@@ -307,6 +353,10 @@ pakai alat yang sama, hasilnya bakal sama terus.
 
 **Akun belum kedaftar atau kiriman dobel (kode 409).** Bilang: "namamu belum didaftarin di
 halaman OKR, atau kiriman yang sama masih jalan. Hubungi Louis dulu". Berhenti juga.
+Cara mastiin akunnya beres: `--cek-kunci` nyebut nama kamu = akunnya kedaftar, jadi 409-nya
+soal nomor kiriman. Alat versi sekarang bikin nomor kiriman BARU tiap isi berkas berubah, jadi
+409 gara-gara "berkas lama diedit lalu dikirim lagi" nol kejadian lagi. Kalau tetap 409, alatnya
+hampir pasti versi lama: ambil ulang dari halaman panduan.
 
 **Halaman OKR lagi ngadat (kode 500 ke atas).** Ini SATU-SATUNYA kode yang boleh diulang.
 Halamannya yang lagi sakit, bukan kunci dan bukan isian, dan belum ketahuan ajuannya masuk
@@ -326,16 +376,29 @@ tunjukin di mana berkasnya disimpan.
 ## Pagar
 
 - **Ngirim ga bisa ditarik.** Wajib ada izin jelas dari pemakai di langkah 6.
-- **Ngirim ulang pakai berkas yang SAMA.** Tiap berkas ajuan punya nomor kiriman sendiri yang
-  disimpen di berkas pendamping `<nama-ajuan>.json.nomor-kirim`. Nomor itu yang bikin halaman
-  OKR tau kiriman ulang bukan ajuan baru. JANGAN hapus berkas pendamping itu, dan jangan
+- **Nomor kiriman ngikutin isi berkas.** Nomornya disimpen di berkas pendamping
+  `<nama-ajuan>.json.nomor-kirim` bareng sidik isinya. Isi SAMA dikirim ulang (sambungan
+  putus, kode 500) = nomor sama, halaman OKR nol nyimpen dobel. Isi DIEDIT lalu dikirim = nomor
+  baru = ronde baru (baca Langkah 6b dulu). JANGAN hapus berkas pendamping itu, dan jangan
   bikin salinan berkas ajuan buat ngirim ulang.
+
 - **Nol kunci nempel di berkas skill.** Kunci cuma dari `OKR_KUNCI` atau `okr-kunci.txt`.
 - **Nol nama isian karangan.** Cuma dua belas nama plus `baseline` dan `langkah` yang ada di tabel atas.
 - **Nol ngisiin jawaban pemakai.** Agent boleh mancing, mantulin, ngasih contoh. Agent
   JANGAN ngarang angka isian 4, ngarang nama sistem di isian 2, atau ngarang nama orang di
   isian 7. Yang dinilai kerjaan pemakai, bukan kerjaan agent.
 - **Jam apa pun yang disebut = WIB.**
+
+---
+
+## Kalau mentok
+
+Kalau alatnya error yang nol kejelasan di bagian "Balikan dan artinya", atau panduan ini
+nyuruh sesuatu yang nol jalan di komputermu: **jangan diakalin, jangan nyoba-nyoba kunci**.
+Bikin laporan di repo ERP TumblerYuk (yang biasa dipakai tim buat lapor), pasang label
+`lapor-tim`, judulnya diawali `[okr]`. Tempel perintah yang kamu jalanin + pesan yang keluar
+apa adanya, **tanpa kunci**. Laporan di situ yang bikin panduan ini dibenerin buat semua orang;
+keluhan lewat chat pribadi gampang ketelen.
 
 ---
 

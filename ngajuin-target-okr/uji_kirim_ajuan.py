@@ -98,6 +98,57 @@ repo_kosong["langkah"] = copy.deepcopy(repo_kosong["langkah"])
 repo_kosong["langkah"][0]["repo"] = ""
 cek("gudang kode kosong tetap sah", masalah_langkah(repo_kosong) == [])
 
+print("== jendela wajib di kuartal yang lagi jalan ==")
+
+
+def masalah_kuartal(data, hari_ini):
+    return [m for m in K.periksa(data, arah="turun", nama_saya="Nur", hari_ini=hari_ini)
+            if "kuartal" in m.lower() and "jendela_mulai" in m]
+
+
+Q4 = (2026, 10, 5)
+lama = contoh()
+lama["jendela_mulai"], lama["jendela_selesai"] = "2026-08-01", "2026-10-31"
+keluhan = masalah_kuartal(lama, Q4)
+cek("jendela kesalin dari kuartal lama ditolak", keluhan != [],
+    "ajuan bakal nyasar ke kuartal lewat dan nol muncul di papan")
+cek("keluhannya nyebut tanggal paling awal yang sah",
+    any("2026-10-01" in m for m in keluhan), str(keluhan))
+kini = contoh()
+kini["jendela_mulai"], kini["jendela_selesai"] = "2026-10-06", "2026-12-31"
+cek("jendela di kuartal ini nol diprotes", masalah_kuartal(kini, Q4) == [])
+depan = contoh()
+depan["jendela_mulai"], depan["jendela_selesai"] = "2027-01-04", "2027-03-31"
+cek("jendela kuartal depan (ngajuin duluan) nol diprotes",
+    masalah_kuartal(depan, (2026, 12, 28)) == [])
+jauh = contoh()
+jauh["jendela_mulai"], jauh["jendela_selesai"] = "2027-10-01", "2027-12-31"
+cek("jendela salah ketik setahun ke depan ditolak", masalah_kuartal(jauh, Q4) != [])
+cek("contoh terbitan lolos di kuartal tanggal contohnya",
+    masalah_kuartal(contoh(), K.ke_tanggal(contoh()["jendela_mulai"])) == [])
+
+print("== nomor kirim ikut isi ==")
+import tempfile  # noqa: E402
+
+with tempfile.TemporaryDirectory() as folder:
+    berkas = os.path.join(folder, "ajuan.json")
+    a1 = K.nomor_kirim(berkas, b"isi pertama")
+    a2 = K.nomor_kirim(berkas, b"isi pertama")
+    b1 = K.nomor_kirim(berkas, b"isi diedit")
+    cek("kirim ulang isi SAMA pakai nomor sama (anti dobel)", a1 == a2)
+    cek("isi diedit dapat nomor BARU (anti 409 nyangkut)", a1 != b1)
+    with open(berkas + ".nomor-kirim", "w", encoding="utf-8") as f:
+        f.write("11111111-2222-3333-4444-555555555555")
+    cek("berkas pendamping model lama nol bikin meledak",
+        K.nomor_kirim(berkas, b"isi pertama") != "11111111-2222-3333-4444-555555555555")
+    with open(berkas + ".nomor-kirim", "wb") as f:
+        f.write(bytes([0xFF, 0xFE, 0x00]) + b"rusak")
+    try:
+        rusak_ok = bool(K.nomor_kirim(berkas, b"isi pertama"))
+    except Exception:
+        rusak_ok = False
+    cek("berkas pendamping rusak nol bikin meledak", rusak_ok)
+
 print()
 if gagal:
     print("GAGAL " + str(len(gagal)) + " uji: " + ", ".join(gagal))
