@@ -239,9 +239,12 @@ Sebelum ngirim ulang, agent WAJIB:
 3. Tulis ulang SEMUA yang masih dikerjain ke berkas kiriman, plus yang baru.
 4. Baru kirim.
 
-**Nol ada tombol buat ngebalikin status langkah satu-satu.** Langkah yang terlanjur
-ke-`ganti_arah` cuma bisa idup lagi lewat kiriman berikutnya yang nyebut dia lagi. Ini yang
-bikin langkah 1-3 di atas bukan saran, tapi wajib.
+**Langkah yang terlanjur ke-`ganti_arah` NOL bisa diidupin lagi.** Nol ada tombol buat
+ngebalikin statusnya. Kiriman berikutnya yang nulis ulang langkah itu bikin langkah BARU
+dengan nomor (`id`) BARU; yang lama tetap `ganti_arah` selamanya. Akibatnya label
+`[okr: <nomor lama>]` di judul PR berikutnya nol kehitung lagi: sesudah kirim ulang, tarik
+lagi `GET /api/okr/saya` dan kasih tau pemakai nomor langkah yang BARU. Ini yang bikin langkah
+1-3 di atas bukan saran, tapi wajib.
 
 ⚠️ Nomor `ronde` mentok di 2. Kiriman ketiga dan seterusnya TETAP diterima dan langkah
 lamanya TETAP dipensiunin, cuma nomor rondenya nol naik lagi.
@@ -379,6 +382,13 @@ tunjukin di mana berkasnya disimpan.
   baru = ronde baru (baca Langkah 6b dulu). JANGAN hapus berkas pendamping itu, dan jangan
   bikin salinan berkas ajuan buat ngirim ulang.
 
+- **Nol kunci nempel di berkas skill.** Kunci cuma dari `OKR_KUNCI` atau `okr-kunci.txt`.
+- **Nol nama isian karangan.** Cuma dua belas nama plus `baseline` dan `langkah` yang ada di tabel atas.
+- **Nol ngisiin jawaban pemakai.** Agent boleh mancing, mantulin, ngasih contoh. Agent
+  JANGAN ngarang angka isian 4, ngarang nama sistem di isian 2, atau ngarang nama orang di
+  isian 7. Yang dinilai kerjaan pemakai, bukan kerjaan agent.
+- **Jam apa pun yang disebut = WIB.**
+
 ---
 
 ## Kalau mentok
@@ -389,12 +399,6 @@ Bikin laporan di repo ERP TumblerYuk (yang biasa dipakai tim buat lapor), pasang
 `lapor-tim`, judulnya diawali `[okr]`. Tempel perintah yang kamu jalanin + pesan yang keluar
 apa adanya, **tanpa kunci**. Laporan di situ yang bikin panduan ini dibenerin buat semua orang;
 keluhan lewat chat pribadi gampang ketelen.
-- **Nol kunci nempel di berkas skill.** Kunci cuma dari `OKR_KUNCI` atau `okr-kunci.txt`.
-- **Nol nama isian karangan.** Cuma dua belas nama plus `baseline` dan `langkah` yang ada di tabel atas.
-- **Nol ngisiin jawaban pemakai.** Agent boleh mancing, mantulin, ngasih contoh. Agent
-  JANGAN ngarang angka isian 4, ngarang nama sistem di isian 2, atau ngarang nama orang di
-  isian 7. Yang dinilai kerjaan pemakai, bukan kerjaan agent.
-- **Jam apa pun yang disebut = WIB.**
 
 ---
 

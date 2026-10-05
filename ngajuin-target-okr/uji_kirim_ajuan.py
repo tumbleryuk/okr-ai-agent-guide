@@ -141,6 +141,13 @@ with tempfile.TemporaryDirectory() as folder:
         f.write("11111111-2222-3333-4444-555555555555")
     cek("berkas pendamping model lama nol bikin meledak",
         K.nomor_kirim(berkas, b"isi pertama") != "11111111-2222-3333-4444-555555555555")
+    with open(berkas + ".nomor-kirim", "wb") as f:
+        f.write(bytes([0xFF, 0xFE, 0x00]) + b"rusak")
+    try:
+        rusak_ok = bool(K.nomor_kirim(berkas, b"isi pertama"))
+    except Exception:
+        rusak_ok = False
+    cek("berkas pendamping rusak nol bikin meledak", rusak_ok)
 
 print()
 if gagal:

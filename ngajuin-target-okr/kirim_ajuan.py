@@ -557,7 +557,8 @@ def nomor_kirim(path_ajuan, isi):
                 bagian = f.read().split()
             if len(bagian) == 2 and bagian[0] == sidik:
                 return bagian[1]
-    except OSError:
+    except (OSError, ValueError):
+        # Berkas pendamping rusak (byte ngaco) = anggap nol ada, bikin nomor baru.
         pass
 
     baru = str(uuid.uuid4())
