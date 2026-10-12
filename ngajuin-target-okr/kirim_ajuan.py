@@ -429,6 +429,34 @@ def periksa(data, arah=None, nama_saya=None, hari_ini=None):
                 + ". Targetnya udah lewat sebelum kuartal mulai, ambangnya harus dinaikin."
             )
 
+    # 8. Jenis kiriman: target BARU (langkah ajuan lain nol disentuh) atau REVISI satu ajuan.
+    #    Dua-duanya kosong = perilaku lama: semua langkahmu di kuartal itu dipensiunin.
+    masalah.extend(masalah_jenis_kiriman(data))
+
+    return masalah
+
+
+def _ya(nilai):
+    """`target_baru` boleh ditulis true / "true" / "ya" / "1" -- server baca semua bentuk itu."""
+    return str(nilai).strip().lower() in ("true", "ya", "1")
+
+
+def masalah_jenis_kiriman(data):
+    """Keluhan soal `target_baru` / `menggantikan_ajuan_id` (Langkah 6b)."""
+    masalah = []
+    baru = data.get("target_baru")
+    ganti = data.get("menggantikan_ajuan_id")
+    ada_baru = baru not in (None, "", False) and _ya(baru)
+    ada_ganti = ganti not in (None, "")
+    if baru not in (None, "", False) and not _ya(baru) and str(baru).strip().lower() not in ("false", "tidak", "0"):
+        masalah.append("'target_baru' cuma boleh true / ya. Kosongin kalau ini bukan target baru.")
+    if ada_ganti and not (str(ganti).strip().isdigit() and int(str(ganti).strip()) > 0):
+        masalah.append("'menggantikan_ajuan_id' wajib nomor ajuan (angka > 0) yang mau kamu revisi.")
+    if ada_baru and ada_ganti:
+        masalah.append(
+            "'target_baru' dan 'menggantikan_ajuan_id' nol boleh diisi barengan. Pilih satu: "
+            "target BARU (ajuan lain tetap jalan) atau REVISI satu ajuan."
+        )
     return masalah
 
 
@@ -453,6 +481,13 @@ def badan_permintaan(data):
         for satu in data.get("langkah", [])
         if isinstance(satu, dict)
     ]
+    # Jenis kiriman (Langkah 6b). Cuma ikut kekirim kalau diisi, biar ajuan lama tetap
+    # berperilaku persis kayak dulu.
+    if _ya(data.get("target_baru", "")):
+        badan["target_baru"] = "true"
+    ganti = str(data.get("menggantikan_ajuan_id", "") or "").strip()
+    if ganti:
+        badan["menggantikan_ajuan_id"] = ganti
     return badan
 
 

@@ -149,6 +149,36 @@ with tempfile.TemporaryDirectory() as folder:
         rusak_ok = False
     cek("berkas pendamping rusak nol bikin meledak", rusak_ok)
 
+print("== jenis kiriman: target baru / revisi (Langkah 6b) ==")
+polos = K.badan_permintaan(contoh())
+cek("ajuan polos nol bawa target_baru / menggantikan_ajuan_id (perilaku lama utuh)",
+    "target_baru" not in polos and "menggantikan_ajuan_id" not in polos, str(sorted(polos)))
+cek("ajuan polos nol diprotes soal jenis kiriman", K.masalah_jenis_kiriman(contoh()) == [])
+for nilai in (True, "true", "ya", "1"):
+    baru = contoh()
+    baru["target_baru"] = nilai
+    cek("target_baru=" + repr(nilai) + " kekirim jadi teks 'true'",
+        K.badan_permintaan(baru).get("target_baru") == "true")
+    cek("target_baru=" + repr(nilai) + " nol diprotes", K.masalah_jenis_kiriman(baru) == [])
+ganti = contoh()
+ganti["menggantikan_ajuan_id"] = 8
+cek("menggantikan_ajuan_id=8 kekirim jadi teks '8'",
+    K.badan_permintaan(ganti).get("menggantikan_ajuan_id") == "8")
+cek("menggantikan_ajuan_id=8 nol diprotes", K.masalah_jenis_kiriman(ganti) == [])
+for jelek in ("abc", "0", "-3"):
+    salah = contoh()
+    salah["menggantikan_ajuan_id"] = jelek
+    cek("menggantikan_ajuan_id=" + repr(jelek) + " ditolak", K.masalah_jenis_kiriman(salah) != [])
+dobel = contoh()
+dobel["target_baru"] = True
+dobel["menggantikan_ajuan_id"] = "8"
+cek("target_baru + menggantikan_ajuan_id barengan ditolak", K.masalah_jenis_kiriman(dobel) != [])
+cek("periksa() ikut nembak tolakan jenis kiriman",
+    any("barengan" in m for m in K.periksa(dobel, arah="turun", nama_saya="Nur")))
+aneh = contoh()
+aneh["target_baru"] = "mungkin"
+cek("target_baru ngawur ditolak", K.masalah_jenis_kiriman(aneh) != [])
+
 print()
 if gagal:
     print("GAGAL " + str(len(gagal)) + " uji: " + ", ".join(gagal))

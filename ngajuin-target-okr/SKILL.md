@@ -249,6 +249,30 @@ lagi `GET /api/okr/saya` dan kasih tau pemakai nomor langkah yang BARU. Ini yang
 ⚠️ Nomor `ronde` mentok di 2. Kiriman ketiga dan seterusnya TETAP diterima dan langkah
 lamanya TETAP dipensiunin, cuma nomor rondenya nol naik lagi.
 
+#### Langkah 6c. Dua target di kuartal yang sama (boleh, ketok Ko Louis 12 Okt 2026)
+
+Satu orang boleh punya lebih dari satu target OKR di kuartal yang sama. Supaya ajuan kedua
+NOL mensiunin langkah ajuan pertama, berkas kiriman wajib nyebut jenisnya. Pilih SATU:
+
+| Mau apa | Tulis di berkas ajuan | Akibatnya |
+|---|---|---|
+| Target BARU, ajuan lama tetap jalan | `"target_baru": true` | Nol langkah lama dipensiunin. Ajuan baru mulai ronde 1. |
+| REVISI satu ajuan tertentu | `"menggantikan_ajuan_id": <nomor ajuan>` | Cuma langkah ajuan itu yang jadi `ganti_arah`. Ronde = ronde ajuan itu + 1. |
+| (kosong dua-duanya) | — | Perilaku lama Langkah 6b: SEMUA langkahmu di kuartal itu dipensiunin. |
+
+Aturan tambahan:
+- Dua-duanya diisi barengan = ditolak, nol ada yang ditulis.
+- `menggantikan_ajuan_id` wajib nomor ajuan MILIKMU di kuartal yang sama. Nomor ajuan orang lain ditolak.
+- Target baru yang `kata_kunci` langkahnya SAMA dengan langkah yang masih jalan di ajuanmu yang
+  lain = ditolak. Alasannya: pencocok PR nyerah diam-diam kalau dua langkah hidup punya kata
+  kunci sama, jadi kerjaanmu nol kecatat. Bedain kata kuncinya, dan tetap tulis label
+  `[okr: <nomor langkah>]` di judul PR.
+- ⚠️ Kolom ini baru dibaca server SESUDAH perbaikan di `Louisfernaldi/okr-bonus-tim`
+  (cabang `okr-2-target-per-kuartal`) naik live. Sebelum itu server NOL kenal kolomnya dan
+  tetap mensiunin semua langkahmu. **Jangan kirim target kedua sebelum dikabari sudah naik.**
+
+`python kirim_ajuan.py --cek <berkas>` udah ngecek bentuk dua kolom ini sebelum dikirim.
+
 ### Langkah 7. Terjemahin balikannya
 Lihat bagian "Balikan dan artinya" di bawah. Jangan nempel balasan mentah ke pemakai.
 
