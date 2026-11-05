@@ -179,6 +179,20 @@ aneh = contoh()
 aneh["target_baru"] = "mungkin"
 cek("target_baru ngawur ditolak", K.masalah_jenis_kiriman(aneh) != [])
 
+print("== periksa mengenali isian jenis kiriman ==")
+periksa_baru = contoh()
+periksa_baru["target_baru"] = True
+cek("periksa() mengenali target_baru",
+    not any("ga dikenal" in m for m in K.periksa(periksa_baru, arah="turun", nama_saya="Nur")))
+periksa_ganti = contoh()
+periksa_ganti["menggantikan_ajuan_id"] = "8"
+cek("periksa() mengenali menggantikan_ajuan_id",
+    not any("ga dikenal" in m for m in K.periksa(periksa_ganti, arah="turun", nama_saya="Nur")))
+periksa_asing = contoh()
+periksa_asing["isian_asing"] = "x"
+cek("periksa() tetap menolak isian asing",
+    any("ga dikenal" in m for m in K.periksa(periksa_asing, arah="turun", nama_saya="Nur")))
+
 print()
 if gagal:
     print("GAGAL " + str(len(gagal)) + " uji: " + ", ".join(gagal))
