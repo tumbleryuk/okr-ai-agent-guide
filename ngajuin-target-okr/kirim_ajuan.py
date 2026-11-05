@@ -222,7 +222,7 @@ def periksa(data, arah=None, nama_saya=None, hari_ini=None):
             masalah.append("Isian '" + nama + "' masih kosong.")
 
     # 2. Nol nama isian karangan
-    boleh = set(ISIAN_WAJIB + ["baseline", "langkah"])
+    boleh = set(ISIAN_WAJIB + ["baseline", "langkah", "target_baru", "menggantikan_ajuan_id"])
     for nama in data:
         if nama not in boleh:
             masalah.append(
